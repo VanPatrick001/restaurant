@@ -1,0 +1,48 @@
+# =====================================================================
+#  BAB AL FKAMAH v4 — prérequis
+#  (Projet Node.js : ce fichier liste ce qu'il faut installer ;
+#   les bibliothèques s'installent automatiquement avec « npm install ».)
+# =====================================================================
+
+# ---------------------------------------------------------------------
+# 1. PC SERVEUR (Windows 10/11, Linux ou macOS)
+# ---------------------------------------------------------------------
+Node.js                >= 18    (recommandé : 22 LTS)   https://nodejs.org
+MySQL                  >= 8.0   ou MariaDB >= 10.6      https://dev.mysql.com/downloads/installer/
+                                (XAMPP / WAMP conviennent aussi)
+Navigateur récent      Chrome, Edge ou Firefox (pour l'administration sur le PC)
+Réseau                 Wi-Fi / box du restaurant ; ports 80, 3000 (TCP) et 53 (UDP+TCP, DNS) ouverts
+                       → ouvrir-acces-reseau.bat / configurer-domaine.ps1 s'en chargent
+
+# Option Docker (à la place de Node.js + MySQL installés à la main)
+Docker Engine          >= 24    avec Docker Compose v2  https://docs.docker.com/get-docker/
+
+# ---------------------------------------------------------------------
+# 2. BIBLIOTHÈQUES NODE.JS (installées par « npm install », voir package.json)
+# ---------------------------------------------------------------------
+express                  5.2.1    serveur web / API
+mysql2                   3.24.4   connexion MySQL
+bcryptjs                 3.0.3    hachage des mots de passe
+jsonwebtoken             9.0.3    sessions (jetons)
+dotenv                   18.0.4   lecture du fichier .env
+@simplewebauthn/server   13.3.3   empreinte digitale / reconnaissance faciale (WebAuthn)
+@simplewebauthn/browser  13.3.0   partie navigateur de WebAuthn
+
+# ---------------------------------------------------------------------
+# 3. APPAREILS CLIENTS
+# ---------------------------------------------------------------------
+Android                >= 7.0 (API 24), Android 14 recommandé  → dist/BAB-AL-FKAMAH.apk
+                       Android System WebView / Chrome à jour
+PC Windows             Windows 10/11 64 bits                   → dist/BAB-AL-FKAMAH-PC-Windows.zip
+                       (ou desktop/BAB AL FKAMAH (Edge).bat avec Microsoft Edge)
+iPhone / tablette      Safari récent : http://rest.babfkamah.com puis « Ajouter à l'écran d'accueil »
+Imprimante tickets     toute imprimante installée sur l'appareil (80 mm conseillée)
+
+# ---------------------------------------------------------------------
+# 4. RECONSTRUIRE LES APPLICATIONS (facultatif, développeurs)
+# ---------------------------------------------------------------------
+Java                   >= 11            (APK)
+apktool                2.9.3            https://github.com/iBotPeaches/Apktool/releases
+uber-apk-signer        1.3.0            https://github.com/patrickfav/uber-apk-signer/releases
+Electron               44.x (win32-x64) (application PC, voir desktop/construire-pc.sh)
+Python 3 + Pillow                       (génération de l'icône .ico)

@@ -1,0 +1,6 @@
+Keystore : bab-al-fkamah.jks
+Alias    : resto
+Mot de passe (keystore et cle) : 4uG4gP3OV8EX8ycL
+
+GARDEZ CE FICHIER ET CE MOT DE PASSE : ils sont necessaires pour publier des mises a jour de l APK
+(sans eux, Android refusera d installer une nouvelle version par-dessus l ancienne).

@@ -1,0 +1,63 @@
+# BAB AL FKAMAH — pile complète : MySQL 8 + application (+ DNS local optionnel)
+#   docker compose up -d --build          → http://localhost  (et http://IP-DU-PC)
+#   docker compose --profile dns up -d    → ajoute le serveur DNS rest.babfkamah.com
+# La base est créée et remplie automatiquement au PREMIER démarrage (volume db vide).
+services:
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_pass}
+      MYSQL_DATABASE: bab_al_fkamah
+      MYSQL_USER: resto
+      MYSQL_PASSWORD: ${DB_PASSWORD:-resto_pass}
+      TZ: Asia/Dubai
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci", "--default-time-zone=+04:00"]
+    volumes:
+      - db:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/1-schema.sql:ro
+      - ./database/seed.sql:/docker-entrypoint-initdb.d/2-seed.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${DB_ROOT_PASSWORD:-root_pass}"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  app:
+    build: .
+    image: bab-al-fkamah:4
+    restart: unless-stopped
+    depends_on:
+      db: { condition: service_healthy }
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: resto
+      DB_PASSWORD: ${DB_PASSWORD:-resto_pass}
+      DB_NAME: bab_al_fkamah
+      JWT_SECRET: ${JWT_SECRET:-changez-moi-par-une-longue-phrase-secrete}
+      TZ: Asia/Dubai
+    ports:
+      - "80:3000"
+      - "3000:3000"
+    volumes:
+      - uploads:/app/uploads
+
+  # Serveur DNS local : répond rest.babfkamah.com → IP du PC (réseau de l'hôte, Linux uniquement).
+  # Sous Windows, lancez plutôt serveur-dns.bat directement sur le PC.
+  dns:
+    profiles: ["dns"]
+    build: .
+    image: bab-al-fkamah:4
+    restart: unless-stopped
+    network_mode: host
+    user: root
+    environment:
+      DNS_DOMAINE: rest.babfkamah.com
+      DNS_AMONT: 8.8.8.8,1.1.1.1
+      # DNS_IP: 192.168.1.101
+    command: ["node", "server/dns.js"]
+
+volumes:
+  db:
+  uploads:

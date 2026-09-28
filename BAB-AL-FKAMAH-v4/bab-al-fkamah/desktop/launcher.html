@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BAB AL FKAMAH</title>
+<style>
+  :root { --accent: #0f766e; --ink: #1c1917; --muted: #78716c; --line: #e7e2da; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; background: #f6f4f0; color: var(--ink); font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans Arabic", Tahoma, sans-serif; }
+  body { display: grid; place-items: center; padding: 24px 16px; min-height: 100vh; }
+  .card { width: 100%; max-width: 440px; background: #fff; border-radius: 22px; padding: 26px 24px; box-shadow: 0 4px 24px rgba(0,0,0,.08); text-align: center; }
+  img { width: 76px; height: 76px; border-radius: 18px; }
+  h1 { font-size: 1.35rem; margin: 12px 0 4px; letter-spacing: .02em; }
+  p { color: var(--muted); margin: 6px 0; line-height: 1.45; }
+  .langs { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; margin-bottom: 14px; }
+  .langs button { border: 0; background: #fff; padding: .45rem .8rem; font-weight: 700; cursor: pointer; color: var(--muted); margin: 0; width: auto; min-height: 0; border-radius: 0; }
+  .langs button.on { background: var(--ink); color: #fff; }
+  .spin { width: 34px; height: 34px; border: 4px solid #e7e2da; border-top-color: var(--accent); border-radius: 50%; margin: 18px auto 8px; animation: s .8s linear infinite; }
+  @keyframes s { to { transform: rotate(360deg); } }
+  .hidden { display: none !important; }
+  label { display: block; text-align: start; font-size: .82rem; font-weight: 700; color: var(--muted); margin: 16px 0 6px; }
+  input[type=url], input[type=text] { width: 100%; min-height: 48px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; font-size: 1rem; direction: ltr; }
+  input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px #0f766e22; }
+  button { width: 100%; min-height: 50px; border: 0; border-radius: 12px; font-size: 1rem; font-weight: 700; margin-top: 10px; cursor: pointer; }
+  .primary { background: var(--accent); color: #fff; }
+  .ghost { background: #f1ede7; color: var(--ink); }
+  .err { background: #fee2e2; color: #7f1d1d; border-radius: 12px; padding: 10px 12px; text-align: start; font-size: .9rem; margin-top: 14px; }
+  .tips { text-align: start; font-size: .85rem; color: var(--muted); margin: 12px 0 0; padding-inline-start: 18px; }
+  .tips li { margin: 4px 0; }
+  .url { font-weight: 700; color: var(--ink); word-break: break-all; direction: ltr; unicode-bidi: embed; }
+  .check { display: flex; align-items: center; gap: .6rem; font-weight: 600; color: var(--ink); margin-top: 14px; font-size: .9rem; }
+  .check input { width: 20px; height: 20px; accent-color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="langs" id="langs"><button data-l="fr">FR</button><button data-l="en">EN</button><button data-l="ar">عربي</button></div><br>
+  <img src="logo.png" alt="">
+  <h1>BAB AL FKAMAH</h1>
+  <div id="v-cnx"><div class="spin"></div><p><span data-t="connexion"></span> <span class="url" id="u1"></span>…</p></div>
+  <div id="v-reg" class="hidden">
+    <div id="msg" class="err hidden"></div>
+    <ul class="tips"><li data-t="tip1"></li><li data-t="tip2"></li><li data-t="tip3"></li></ul>
+    <label for="adr" data-t="adresse"></label>
+    <input id="adr" type="url" inputmode="url" autocapitalize="none" autocomplete="off" spellcheck="false">
+    <label class="check hidden" id="l-silence"><input type="checkbox" id="silence"> <span data-t="silence"></span></label>
+    <button class="primary" id="go" data-t="connecter"></button>
+    <button class="ghost" id="def" data-t="defaut"></button>
+  </div>
+</div>
+<script>
+  var DEFAUT = 'http://rest.babfkamah.com';
+  var T = {
+    fr: { connexion: 'Connexion à', tip1: 'Appareil connecté au Wi-Fi du restaurant (données mobiles coupées)', tip2: 'PC serveur allumé, avec BAB AL FKAMAH et le serveur DNS lancés', tip3: 'Sinon, saisissez l\'adresse IP du PC, ex. http://192.168.1.101:3000', adresse: 'Adresse du serveur', connecter: 'Se connecter', defaut: 'Adresse par défaut (rest.babfkamah.com)', erreur: 'Impossible de joindre', silence: 'Impression directe sur l\'imprimante par défaut (sans fenêtre)' },
+    en: { connexion: 'Connecting to', tip1: 'Device connected to the restaurant Wi-Fi (mobile data off)', tip2: 'Server PC switched on, with BAB AL FKAMAH and the DNS server running', tip3: 'Otherwise, enter the PC\'s IP address, e.g. http://192.168.1.101:3000', adresse: 'Server address', connecter: 'Connect', defaut: 'Default address (rest.babfkamah.com)', erreur: 'Cannot reach', silence: 'Print directly to the default printer (no dialog)' },
+    ar: { connexion: 'جارٍ الاتصال بـ', tip1: 'الجهاز متصل بشبكة Wi-Fi المطعم (بيانات الجوال مغلقة)', tip2: 'كمبيوتر الخادم يعمل وعليه BAB AL FKAMAH وخادم DNS', tip3: 'وإلا أدخل عنوان IP للكمبيوتر، مثل http://192.168.1.101:3000', adresse: 'عنوان الخادم', connecter: 'اتصال', defaut: 'العنوان الافتراضي (rest.babfkamah.com)', erreur: 'تعذر الوصول إلى', silence: 'طباعة مباشرة على الطابعة الافتراضية (بدون نافذة)' }
+  };
+  function get(k, d) { try { return localStorage.getItem(k) || d; } catch (e) { return d; } }
+  function set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  var lang = get('lang', (navigator.language || 'fr').slice(0, 2));
+  if (!T[lang]) lang = 'fr';
+  function $(id) { return document.getElementById(id); }
+  function appliquerLangue() {
+    document.documentElement.lang = lang; document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    [].forEach.call(document.querySelectorAll('[data-t]'), function (el) { el.textContent = T[lang][el.getAttribute('data-t')]; });
+    [].forEach.call(document.querySelectorAll('[data-l]'), function (b) { b.className = b.getAttribute('data-l') === lang ? 'on' : ''; });
+  }
+  [].forEach.call(document.querySelectorAll('[data-l]'), function (b) { b.onclick = function () { lang = b.getAttribute('data-l'); set('lang', lang); appliquerLangue(); }; });
+  function lire() { return get('serveur', DEFAUT); }
+  function normaliser(v) { v = (v || '').trim().replace(/\/+$/, ''); if (!v) return DEFAUT; if (!/^https?:\/\//i.test(v)) v = 'http://' + v; return v; }
+  function vue(reg, message) {
+    $('v-cnx').classList.toggle('hidden', reg); $('v-reg').classList.toggle('hidden', !reg);
+    $('adr').value = lire();
+    if (message) { $('msg').textContent = message; $('msg').classList.remove('hidden'); } else $('msg').classList.add('hidden');
+  }
+  // Test de joignabilité : image du serveur (aucune restriction entre origines)
+  function tester(url, ok, ko) {
+    var img = new Image(), fini = false;
+    var tm = setTimeout(function () { if (!fini) { fini = true; ko(); } }, 7000);
+    img.onload = function () { if (!fini) { fini = true; clearTimeout(tm); ok(); } };
+    img.onerror = function () { if (!fini) { fini = true; clearTimeout(tm); ko(); } };
+    img.src = url + '/icons/icon-192.png?t=' + Date.now();
+  }
+  function connecter(url) {
+    set('serveur', url);
+    $('u1').textContent = url.replace(/^https?:\/\//, '');
+    vue(false);
+    tester(url, function () { location.replace(url + '/'); }, function () { vue(true, T[lang].erreur + ' ' + url.replace(/^https?:\/\//, '')); });
+  }
+  // Application PC : option d'impression directe
+  if (window.RestoDesktop && window.RestoDesktop.getConfig) {
+    $('l-silence').classList.remove('hidden');
+    window.RestoDesktop.getConfig().then(function (c) { $('silence').checked = !!c.impressionDirecte; });
+    $('silence').onchange = function () { window.RestoDesktop.setConfig({ impressionDirecte: $('silence').checked }); };
+  }
+  $('go').onclick = function () { connecter(normaliser($('adr').value)); };
+  $('adr').onkeydown = function (e) { if (e.key === 'Enter') $('go').onclick(); };
+  $('def').onclick = function () { $('adr').value = DEFAUT; connecter(DEFAUT); };
+  appliquerLangue();
+  var h = location.hash;
+  if (h === '#reglages') vue(true);
+  else if (h === '#erreur') { history.replaceState(null, '', location.pathname); $('u1').textContent = lire().replace(/^https?:\/\//, ''); setTimeout(function () { connecter(lire()); }, 1500); }
+  else connecter(lire());
+</script>
+</body>
+</html>

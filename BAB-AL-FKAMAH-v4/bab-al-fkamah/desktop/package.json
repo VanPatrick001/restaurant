@@ -1,0 +1,11 @@
+{
+  "name": "bab-al-fkamah-pc",
+  "productName": "BAB AL FKAMAH",
+  "version": "4.0.0",
+  "description": "Application PC (Windows) BAB AL FKAMAH - se connecte au serveur du restaurant",
+  "main": "main.js",
+  "author": "BAB AL FKAMAH",
+  "license": "UNLICENSED",
+  "scripts": { "start": "electron ." },
+  "devDependencies": { "electron": "^44.4.5" }
+}
