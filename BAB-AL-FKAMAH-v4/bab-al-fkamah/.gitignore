@@ -1,6 +1,16 @@
+# --- Dépendances et fichiers générés ---
 node_modules/
+logs/
+dist/
+desktop/node_modules/
+android/app/build/
+
+# --- Secrets : ne JAMAIS envoyer sur GitHub ---
 .env
+certs/
+android/*.jks
+android/signature-LISEZMOI.txt
+
+# --- Données du restaurant (photos envoyées dans l'app) ---
 uploads/*/*
 !uploads/*/.gitkeep
-dist/*.zip
-certs/

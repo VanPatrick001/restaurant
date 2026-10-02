@@ -1,0 +1,81 @@
+# =====================================================================
+#  CI — Intégration continue
+#  À chaque « git push » (ou pull request), GitHub :
+#   1. récupère le code,  2. installe Node.js et les dépendances,
+#   3. vérifie la syntaxe de tous les fichiers JavaScript,
+#   4. crée une base MariaDB de test avec les données de démonstration,
+#   5. démarre l'application et lance les tests de fumée.
+#  Si une étape échoue, le commit est marqué ❌ et AUCUN déploiement n'a lieu.
+# =====================================================================
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:        # bouton « Run workflow » dans l'onglet Actions
+
+jobs:
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    # Base de données de test, lancée à côté du job (détruite à la fin)
+    services:
+      db:
+        image: mariadb:11.4
+        env:
+          MARIADB_ROOT_PASSWORD: root
+        ports: ["3306:3306"]
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s --health-timeout=5s --health-retries=30
+
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_ADMIN_USER: root
+      DB_ADMIN_PASSWORD: root
+      DB_NAME: bab_al_fkamah
+      JWT_SECRET: secret-de-test-ci
+      PORT: 3000
+      PORT_WEB: 0
+      TZ: Asia/Dubai
+
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Installer Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Installer les dépendances
+        run: npm ci
+
+      - name: Vérifier la syntaxe JavaScript
+        run: |
+          for f in $(git ls-files 'server/*.js' 'server/**/*.js' 'public/js/*.js' 'public/sw.js'); do
+            node --check "$f" || exit 1
+          done
+          echo "Syntaxe OK"
+
+      - name: Créer la base de test (schéma + données)
+        run: npm run init-db
+
+      - name: Démarrer l'application
+        run: |
+          nohup node server/index.js > app.log 2>&1 &
+          sleep 3
+
+      - name: Tests de fumée
+        run: bash tests/smoke.sh http://127.0.0.1:3000
+
+      - name: Journal de l'application (en cas d'échec)
+        if: failure()
+        run: cat app.log || true

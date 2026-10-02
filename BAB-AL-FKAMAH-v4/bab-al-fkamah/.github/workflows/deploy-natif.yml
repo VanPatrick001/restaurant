@@ -1,0 +1,65 @@
+# =====================================================================
+#  CD sans Docker — après une CI réussie sur « main » :
+#   1. copie le code sur le serveur AWS (rsync via SSH),
+#   2. installe les dépendances et redémarre le service systemd.
+#  Actif seulement si la variable du dépôt DEPLOY_MODE vaut « natif ».
+#  Secrets nécessaires : EC2_HOST, EC2_USER, EC2_SSH_KEY
+# =====================================================================
+name: Déploiement sans Docker
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploiement
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Déployer sur AWS
+    if: vars.DEPLOY_MODE == 'natif' && (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success')
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Préparer la clé SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/aws.pem
+          chmod 600 ~/.ssh/aws.pem
+          ssh-keyscan -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Copier le code sur le serveur
+        env:
+          CIBLE: ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}
+        run: |
+          ssh -i ~/.ssh/aws.pem "$CIBLE" 'mkdir -p ~/bab-al-fkamah/app'
+          # --delete retire les anciens fichiers ; .env, photos et journaux du serveur sont protégés
+          rsync -az --delete -e "ssh -i ~/.ssh/aws.pem" \
+            --exclude '.git/' --exclude 'node_modules/' --exclude '.env' --exclude 'uploads/' \
+            --exclude 'logs/' --exclude 'certs/' --exclude 'dist/' --exclude 'android/' --exclude 'desktop/' \
+            ./ "$CIBLE":~/bab-al-fkamah/app/
+
+      - name: Installer et redémarrer
+        env:
+          CIBLE: ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}
+        run: ssh -i ~/.ssh/aws.pem "$CIBLE" "bash ~/bab-al-fkamah/app/deploy/natif/deployer.sh '${{ secrets.EC2_HOST }}'"
+
+      - name: Vérifier depuis Internet (HTTPS)
+        run: |
+          URL="https://$(echo '${{ secrets.EC2_HOST }}' | tr . -).sslip.io"
+          for i in $(seq 1 30); do
+            curl -fsS "$URL/api/sante" && { echo; echo "✅ $URL"; exit 0; }
+            sleep 5
+          done
+          echo "❌ $URL ne répond pas (port 443 ouvert dans le groupe de sécurité AWS ?)"; exit 1

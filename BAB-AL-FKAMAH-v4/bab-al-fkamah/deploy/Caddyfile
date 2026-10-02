@@ -1,0 +1,5 @@
+# Caddy — HTTPS automatique (Let's Encrypt) pour l'adresse gratuite xx-xx-xx-xx.sslip.io
+{$SITE_ADRESSE} {
+	encode gzip
+	reverse_proxy {$APP_ADRESSE}
+}

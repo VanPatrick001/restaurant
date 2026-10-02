@@ -1,0 +1,60 @@
+# BAB AL FKAMAH — production sur AWS EC2 (avec Docker)
+# Lancé par deploy/docker/deployer.sh ; les secrets sont dans ~/bab-al-fkamah/.env (sur le serveur)
+services:
+  db:
+    image: mariadb:11.4
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MARIADB_DATABASE: bab_al_fkamah
+      MARIADB_USER: resto
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+      TZ: Asia/Dubai
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci", "--default-time-zone=+04:00"]
+    volumes:
+      - db:/var/lib/mysql
+      # Exécutés UNE seule fois, quand la base est vide (premier démarrage)
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/1-schema.sql:ro
+      - ./database/seed.sql:/docker-entrypoint-initdb.d/2-seed.sql:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+  app:
+    image: ${IMAGE}
+    restart: unless-stopped
+    depends_on:
+      db: { condition: service_healthy }
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: resto
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: bab_al_fkamah
+      JWT_SECRET: ${JWT_SECRET}
+      PORT_WEB: "0"
+      TZ: Asia/Dubai
+    volumes:
+      - uploads:/app/uploads
+
+  # Caddy : reçoit le trafic web (80/443) et obtient seul un certificat HTTPS gratuit
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on: [app]
+    ports: ["80:80", "443:443"]
+    environment:
+      SITE_ADRESSE: ${SITE_ADRESSE}
+      APP_ADRESSE: app:3000
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  db:
+  uploads:
+  caddy_data:
+  caddy_config:

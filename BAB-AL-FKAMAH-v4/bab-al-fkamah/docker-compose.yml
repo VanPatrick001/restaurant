@@ -1,10 +1,10 @@
-# BAB AL FKAMAH — pile complète : MySQL 8 + application (+ DNS local optionnel)
+# BAB AL FKAMAH — pile complète : MariaDB 11 + application (+ DNS local optionnel)
 #   docker compose up -d --build          → http://localhost  (et http://IP-DU-PC)
 #   docker compose --profile dns up -d    → ajoute le serveur DNS rest.babfkamah.com
 # La base est créée et remplie automatiquement au PREMIER démarrage (volume db vide).
 services:
   db:
-    image: mysql:8.4
+    image: mariadb:11.4
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_pass}
@@ -18,7 +18,7 @@ services:
       - ./database/schema.sql:/docker-entrypoint-initdb.d/1-schema.sql:ro
       - ./database/seed.sql:/docker-entrypoint-initdb.d/2-seed.sql:ro
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${DB_ROOT_PASSWORD:-root_pass}"]
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 10s
       timeout: 5s
       retries: 20
